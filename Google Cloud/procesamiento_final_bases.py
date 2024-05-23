@@ -16,7 +16,7 @@ table_id_restaurantes = "proyecto-nuevo-423502.Data_Henry_Final.restaurantes"
 table_id_usuarios = "proyecto-nuevo-423502.Data_Henry_Final.usuarios"
 
 # Checkins
-table_id_checkins = "proyecto-nuevo-423502.Data_Henry_Final.checkins"
+# table_id_checkins = "proyecto-nuevo-423502.Data_Henry_Final.checkins"
 
 # Reviews
 table_id_reviews = "proyecto-nuevo-423502.Data_Henry_Final.reviews"
@@ -41,8 +41,8 @@ data_yelp_user = "gs://archivos-pre-procesados/dfy_user.parquet"
 yelp_user = pd.read_parquet(data_yelp_user)
 
 ## checkins
-data_yelp_checkins = "gs://archivos-pre-procesados/dfy_checkins.parquet"
-yelp_checkins = pd.read_parquet(data_yelp_checkins)
+# data_yelp_checkins = "gs://archivos-pre-procesados/dfy_checkins.parquet"
+# yelp_checkins = pd.read_parquet(data_yelp_checkins)
 
 
 ## reviews
@@ -122,16 +122,16 @@ dfy_user['year'] = dfy_user['date_start'].dt.year
 dfy_user['month'] = dfy_user['date_start'].dt.month
 
 ### Checkins 
-dfy_checkins = yelp_checkins[['business_id', 'date']]
-dfy_checkins = dfy_checkins.rename(columns={'business_id':'site_id', 'date':'datetime'})
+# dfy_checkins = yelp_checkins[['business_id', 'date']]
+# dfy_checkins = dfy_checkins.rename(columns={'business_id':'site_id', 'date':'datetime'})
 
     #dfy_checkins['datetime'] = pd.to_datetime(dfy_checkins['date'])
-dfy_checkins['year'] = dfy_checkins['datetime'].dt.year
-dfy_checkins['month'] = dfy_checkins['datetime'].dt.month
+# dfy_checkins['year'] = dfy_checkins['datetime'].dt.year
+# dfy_checkins['month'] = dfy_checkins['datetime'].dt.month
 
-dfy_checkins['source'] = 'yelp'
+# dfy_checkins['source'] = 'yelp'
 
-dfy_checkins = dfy_checkins[['source', 'site_id', 'datetime', 'year', 'month']]
+# dfy_checkins = dfy_checkins[['source', 'site_id', 'datetime', 'year', 'month']]
 
 ### Categorías
 dfy_categories = yelp_site_categories[['site_id', 'categories']]
@@ -173,17 +173,17 @@ dfg_user['year'] = dfg_user['date_start'].dt.year
 dfg_user['month'] = dfg_user['date_start'].dt.month
 
 ### Checkins (se crea el dataset)
-dfy_checkins = yelp_checkins[['business_id', 'date']]
-dfy_checkins = dfy_checkins.rename(columns={'business_id':'site_id', 'date':'datetime'})
+# dfy_checkins = yelp_checkins[['business_id', 'date']]
+# dfy_checkins = dfy_checkins.rename(columns={'business_id':'site_id', 'date':'datetime'})
 
     #dfy_checkins['datetime'] = pd.to_datetime(dfy_checkins['date'])
-dfy_checkins['year'] = dfy_checkins['datetime'].dt.year
-dfy_checkins['month'] = dfy_checkins['datetime'].dt.month
+# dfy_checkins['year'] = dfy_checkins['datetime'].dt.year
+# dfy_checkins['month'] = dfy_checkins['datetime'].dt.month
 
-dfy_checkins['source'] = 'yelp'
+# dfy_checkins['source'] = 'yelp'
 
-dfy_checkins = dfy_checkins[['source', 'site_id', 'datetime', 'year', 'month']]
-dfg_checkins = dfg_reviews[['source', 'site_id', 'datetime', 'year', 'month']]
+# dfy_checkins = dfy_checkins[['source', 'site_id', 'datetime', 'year', 'month']]
+# dfg_checkins = dfg_reviews[['source', 'site_id', 'datetime', 'year', 'month']]
 
 ### Categorías
 dfg_categories = google_site_categories.copy()
@@ -199,25 +199,19 @@ dfg_categories = dfg_categories[['source', 'site_id', 'categories']]
 dfy_rest = dfy_rest[dfy_rest['site_id'].isin(dfgy_rest_uniques['business_id'])]
     # Union
 dfgy_rest = pd.concat([dfy_rest, dfg_rest])
+    # Eliminación de duplicados
+dfgy_rest= dfgy_rest.drop_duplicates(subset=['site_id'], keep='first')
+    # Procesamiento del tipo de dato.
+dfgy_rest[["source",'site_id',"name","state","city","state_city","city_postalcode","state_city_postalcode"]] = dfgy_rest[["source",'site_id',"name","state","city","state_city","city_postalcode","state_city_postalcode"]].astype(str)
+dfgy_rest[["postal_code","year","month"]] = dfgy_rest[["postal_code","year","month"]].astype(float).fillna(0).astype(int)
+
 
 ## User
 dfgy_user = pd.concat([dfy_user, dfg_user])
+    # Procesamiento del tipo de dato.
 dfgy_user['user_id'] = dfgy_user['user_id'].astype(str)
-
-## Checkins
-    # Filtrado
-dfy_checkins = dfy_checkins[dfy_checkins['site_id'].isin(dfgy_rest_uniques['business_id'])]
-
-    # Union
-dfgy_checkins = pd.concat([dfy_checkins, dfg_checkins])
-
-## Reviews
-    # Filtrado
-dfy_reviews = dfy_reviews[dfy_reviews['site_id'].isin(dfgy_rest_uniques['business_id'])]
-
-    # Union
-dfgy_reviews = pd.concat([dfy_reviews, dfg_reviews])
-dfgy_reviews['user_id'] = dfgy_reviews['user_id'].astype(str)
+    #Eliminación de duplicados
+dfgy_user = dfgy_user.drop_duplicates(subset=['user_id'], keep='first')
 
 ## Categorías
     # Filtrado
@@ -225,6 +219,28 @@ dfy_categories = dfy_categories[dfy_categories['site_id'].isin(dfgy_rest_uniques
 
     # Union
 dfgy_categories = pd.concat([dfy_categories, dfg_categories])
+    
+    # Procesamiento del tipo de dato.
+dfgy_categories[['categories',"site_id","source"]] = dfgy_categories[['categories',"site_id","source"]].astype(str)
+
+## Checkins
+    # Filtrado
+# dfy_checkins = dfy_checkins[dfy_checkins['site_id'].isin(dfgy_rest_uniques['business_id'])]
+
+    # Union
+# dfgy_checkins = pd.concat([dfy_checkins, dfg_checkins])
+
+    # Procesamiento del tipo de dato.
+# dfgy_checkins[["source",'site_id']] = dfgy_checkins[["source",'site_id']].astype(str)
+
+## Reviews
+    # Filtrado
+dfy_reviews = dfy_reviews[dfy_reviews['site_id'].isin(dfgy_rest_uniques['business_id'])]
+
+    # Union
+dfgy_reviews = pd.concat([dfy_reviews, dfg_reviews])
+    # Procesamiento del tipo de dato.
+dfgy_reviews[['user_id',"site_id","source"]] = dfgy_reviews[['user_id',"site_id","source"]].astype(str)
 
 # Se crean dos diccionarios para relacionar a cada uno de los dataframes procesados con su tabla correspondiente en BigQuery
 
@@ -232,7 +248,7 @@ dfgy_categories = pd.concat([dfy_categories, dfg_categories])
 dataframe_to_table_map = {
     "dataframe_restaurantes": table_id_restaurantes,
     "dataframe_usuarios": table_id_usuarios,
-    "dataframe_checkins": table_id_checkins,
+    # "dataframe_checkins": table_id_checkins,
     "dataframe_reviews": table_id_reviews,
     "dataframe_categorias": table_id_categorias,
 }
@@ -241,9 +257,9 @@ dataframe_to_table_map = {
 dataframes = {
     "dataframe_restaurantes": dfgy_rest,
     "dataframe_usuarios": dfgy_user,
-    "dataframe_checkins": dfgy_checkins,
     "dataframe_reviews": dfgy_reviews,
-    "dataframe_categorias": dfy_categories,
+    "dataframe_categorias": dfgy_categories,
+    # "dataframe_checkins": dfgy_checkins
 }
 
 # Carga de cada uno de los DataFrame en su tabla correspondiente.
