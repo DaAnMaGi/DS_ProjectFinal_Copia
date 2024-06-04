@@ -1,3 +1,5 @@
 # Se adjudica la carpeta para evitar cargar las bases de datos sin procesar.
 /Data
 /Clave
+
+Exploración/revgoo_AL.parquet
